@@ -28,13 +28,5 @@ struct Buffer : Singleton<Buffer> {
     void down_sampling(std::size_t, std::size_t);
 
     void resize(std::size_t const);
-    void clear(Buffer_Type op)
-    {
-#define PER(x) \
-    if (op & Buffer_Type::x) \
-        clear_##x();
-        PER(color)
-        PER(depth)
-#undef PER
-    }
+    void clear(Buffer_Type op);
 };

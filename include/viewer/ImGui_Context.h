@@ -13,13 +13,10 @@
 struct ImGui_Context : Singleton<ImGui_Context> {
     Config m_config;
 
-    // window states
-    bool show_demo_window;
-    bool show_another_window;
-
     ImGui_Context()
     {}
     ~ImGui_Context() = default;
+
 
     void init_imgui(GLFWwindow *window);
 	void start_frame();

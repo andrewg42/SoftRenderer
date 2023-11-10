@@ -184,7 +184,7 @@ void GL_Context::init()
     CHECK_GL(glEnableVertexAttribArray(1));
 
     // initialize rasterizer
-    raster.add_model("assets/bunny/bunny.obj");
+    raster.add_model("assets/monkey/monkey.obj");
     raster.set_buffer_size(SCR_WIDTH, SCR_HEIGHT);
 
     // create a texture
@@ -217,7 +217,6 @@ void GL_Context::main_loop() {
 
     // draw gui panel
     gui.draw_panel();
-    gui.end_frame();
 
     // render
     raster.draw();

@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include "config/Config.h"
+#include "viewer/ImGui_Context.h"
 
 Buffer_Type operator|(Buffer_Type a, Buffer_Type b)
 {
@@ -33,6 +34,25 @@ void Buffer::clear_depth()
 {
     for(std::size_t i{}; i<m_depth.size(); i++)
         m_depth[i] = 0.0f;
+}
+
+void Buffer::clear(Buffer_Type op)
+{
+    ImGui_Context &gui = ImGui_Context::instance();
+    glm::vec4 tmp = gui.m_config.clear_color;
+    glm::u8vec4 color = glm::u8vec4(
+        static_cast<unsigned char>(tmp.x * 255),
+        static_cast<unsigned char>(tmp.y * 255),
+        static_cast<unsigned char>(tmp.z * 255),
+        static_cast<unsigned char>(tmp.w * 255)
+    );
+
+#define PER(x, ...)                                                            \
+    if (op & Buffer_Type::x)                                                   \
+        clear_##x(__VA_ARGS__);
+        PER(color, color)
+        PER(depth)
+#undef PER
 }
 
 void Buffer::down_sampling(std::size_t width_out, std::size_t height_out)

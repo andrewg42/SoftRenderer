@@ -30,6 +30,7 @@ struct Rasterizer : Singleton<Rasterizer> {
 
     char *data();
 
+    void tick();
     void draw_line(glm::vec3 &, glm::vec3 &);
     void draw_triangle(glm::mat3 &, glm::vec3);
     void draw();

@@ -67,15 +67,8 @@ void Rasterizer::set_color(std::size_t x, std::size_t y, glm::u8vec4 color)
     set_color(idx, color);
 }
 
-void Rasterizer::clear_color()
-{
-    ImGui_Context &gui = ImGui_Context::instance();
-    glm::u8vec4 clear_color = gui.m_config.clear_color;
-    for(std::size_t y{}; y<m_input.m_height; y++) {
-        for(std::size_t x{}; x<m_input.m_width; x++) {
-            set_color(x, y, clear_color);
-        }
-    }
+void Rasterizer::tick() {
+    p_private->update();
 }
 
 // Bresenham's line drawing algorithm (for debugging)
@@ -173,8 +166,22 @@ void Rasterizer::draw_triangle(glm::mat3 &tri, glm::vec3 norm)
     // M = {AB, AC, PA}, where AB and AC are deterministic in a given triangle
     glm::vec3 M_x = {B[0] - A[0], C[0] - A[0], 0.0f};
     glm::vec3 M_y = {B[1] - A[1], C[1] - A[1], 0.0f};
+
     ImGui_Context &gui = ImGui_Context::instance();
-    glm::u8vec4 color = gui.m_config.obj_color;
+
+    if (gui.m_config.enable_wireframe) {
+        draw_line(A, B);
+        draw_line(B, C);
+        draw_line(C, A);
+        return;
+    }
+
+    glm::vec4 tmp = gui.m_config.obj_color;
+    glm::u8vec4 color =
+        glm::u8vec4(static_cast<unsigned char>(tmp.x * 255),
+                    static_cast<unsigned char>(tmp.y * 255),
+                    static_cast<unsigned char>(tmp.z * 255),
+                    static_cast<unsigned char>(tmp.w * 255));
 
     // omp_set_num_threads(16);
     // #pragma omp parallel for
@@ -231,11 +238,6 @@ void Rasterizer::draw_triangle(glm::mat3 &tri, glm::vec3 norm)
         }
     }
 
-#ifndef NDEBUG
-    draw_line(A, B);
-    draw_line(B, C);
-    draw_line(C, A);
-#endif
 }
 
 static void ndc2scr(glm::vec3 &vec, std::size_t width, std::size_t height)
@@ -253,9 +255,9 @@ static glm::vec3 get_norm(glm::vec3 A, glm::vec3 B, glm::vec3 C)
 
 void Rasterizer::draw()
 {
+    ImGui_Context &gui = ImGui_Context::instance();
     // clear color
     m_buffer.clear(Buffer_Type::color | Buffer_Type::depth);
-    //clear_color();
 
     // vertex shader: transform the vertices
     glm::mat4 modelview = m_input.m_camera.get_lookAt_mat() * model_mat();
@@ -271,13 +273,14 @@ void Rasterizer::draw()
                                     glm::vec4(vec_pos[face[2]], 1.0f)};
         M = modelview * M;
 
+
         // face culling
         glm::vec3 A = perspective_divide(M[0]);
         glm::vec3 B = perspective_divide(M[1]);
         glm::vec3 C = perspective_divide(M[2]);
         glm::vec3 bc = (A + B + C) / 3.0f;
         glm::vec3 norm = get_norm(A, B, C);
-        if (glm::dot(bc, norm) > 0)
+        if (!gui.m_config.enable_faceculling && gui.m_config.enable_faceculling && glm::dot(bc, norm) > 0)
             continue;
 
         M = proj * M;
@@ -298,5 +301,6 @@ void Rasterizer::draw()
 
     m_buffer.down_sampling(m_input.m_width, m_input.m_height);
 
+    tick();
     // std::swap(m_canvas, m_buffer); // ping-pong buffer?
 }

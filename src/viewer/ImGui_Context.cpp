@@ -2,6 +2,10 @@
 
 #include <string>
 
+bool ImGui::Combo(const char *label, int *current_item,
+                  const char *const items[], int items_count,
+                  int height_in_items);
+
 void ImGui_Context::init_imgui(GLFWwindow *window)
 {
     IMGUI_CHECKVERSION();
@@ -24,10 +28,6 @@ void ImGui_Context::init_imgui(GLFWwindow *window)
     // load font
     ImFont *font = io.Fonts->AddFontDefault();
     IM_ASSERT(font != nullptr);
-
-    // states
-    show_demo_window = false;
-    show_another_window = false;
 }
 
 
@@ -38,55 +38,129 @@ void ImGui_Context::start_frame()
     ImGui::NewFrame();
 }
 
+static void show_debugging_panel() {
+    //MY_DEMO_MARKER("Debug");
+    if (ImGui::CollapsingHeader("Debugging")) {
+        ImGuiIO &io = ImGui::GetIO();
+        if (ImGui::IsMousePosValid())
+            ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
+        else
+            ImGui::Text("Mouse pos: <INVALID>");
+        ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
+        ImGui::Text("Mouse down:");
+        for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
+            if (ImGui::IsMouseDown(i)) {
+                ImGui::SameLine();
+                ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]);
+            }
+        ImGui::Text("Mouse wheel: %.1f", io.MouseWheel);
+
+        // We iterate both legacy native range and named ImGuiKey ranges, which
+        // is a little odd but this allows displaying the data for old/new
+        // backends. User code should never have to go through such hoops! You
+        // can generally iterate between ImGuiKey_NamedKey_BEGIN and
+        // ImGuiKey_NamedKey_END.
+#ifdef IMGUI_DISABLE_OBSOLETE_KEYIO
+        struct funcs {
+            static bool IsLegacyNativeDupe(ImGuiKey) { return false; }
+        };
+        ImGuiKey start_key = ImGuiKey_NamedKey_BEGIN;
+#else
+        struct funcs {
+            static bool IsLegacyNativeDupe(ImGuiKey key)
+            {
+                return key < 512 && ImGui::GetIO().KeyMap[key] != -1;
+            }
+        }; // Hide Native<>ImGuiKey duplicates when both exists in the array
+        ImGuiKey start_key = (ImGuiKey)0;
+#endif
+        ImGui::Text("Keys down:");
+        for (ImGuiKey key = start_key; key < ImGuiKey_NamedKey_END;
+             key = (ImGuiKey)(key + 1)) {
+            if (funcs::IsLegacyNativeDupe(key) || !ImGui::IsKeyDown(key))
+                continue;
+            ImGui::SameLine();
+            ImGui::Text((key < ImGuiKey_NamedKey_BEGIN) ? "\"%s\""
+                                                        : "\"%s\" %d",
+                        ImGui::GetKeyName(key), key);
+        }
+        ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "",
+                    io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "",
+                    io.KeySuper ? "SUPER " : "");
+        ImGui::Text("Chars queue:");
+        for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
+            ImWchar c = io.InputQueueCharacters[i];
+            ImGui::SameLine();
+            ImGui::Text("\'%c\' (0x%04X)",
+                        (c > ' ' && c <= 255) ? (char)c : '?', c);
+        } // FIXME: We should convert 'c' to UTF-8 here but the functions are
+          // not public.
+    }
+}
+
+
 void ImGui_Context::draw_panel()
 {
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
+
+    static const char *aa_items[] = {"None", "MSAA",
+                                     "FXAA(still not supported)",
+                                     "SMAA(still not supported)"};
+    static const char *shadow_items[] = {"None", "Shadow Mapping", "PCSS"};
+    static const char *ao_items[] = {"None", "SSAO"};
+
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
 
     {
         static float f = 0.0f;
         static int counter = 0;
 
-        ImGui::Begin("Hello, world!");
-
-        ImGui::Text("This is some useful text.");
-
-        ImGui::Checkbox("Demo Window", &show_demo_window);
-        ImGui::Checkbox("Another Window", &show_another_window);
-
-        // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-        // Edit 3 floats representing a color
-        ImGui::ColorEdit3("obj color", (float *)&m_config.obj_color);
-
-        // Buttons return true when clicked (most widgets
-        // return true when edited/activated)
-        if (ImGui::Button("Button"))
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
+        ImGui::Begin("Configuration");
 
         // calculate fps
-        ImGuiIO &io = ImGui::GetIO();
-        (void)io;
         float fps = io.Framerate;
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                     1000.0f / fps, fps);
 
+        {
+            ImGui::ColorEdit4("obj color", (float *)&m_config.obj_color);
+            ImGui::ColorEdit3("light color", (float *)&m_config.light_color);
+            ImGui::ColorEdit4("clear color", (float *)&m_config.clear_color);
+        }
+
+        {
+            ImGui::Checkbox("Face Culling",
+                            &m_config.enable_faceculling);
+            ImGui::Checkbox("Wireframe", &m_config.enable_wireframe);
+        }
+        {
+            static int aa_item = static_cast<int>(m_config.aa_type);
+            ImGui::Combo("Anti-aliasing", &aa_item, aa_items,
+                         IM_ARRAYSIZE(aa_items));
+            m_config.aa_type = static_cast<AA_Type>(aa_item);
+        }
+        {
+            static int ao_item = static_cast<int>(m_config.ao_type);
+            ImGui::Combo("Ambient Occlusion", &ao_item, ao_items,
+                         IM_ARRAYSIZE(ao_items));
+            m_config.ao_type = static_cast<AO_Type>(ao_item);
+        }
+        {
+            static int shadow_item = static_cast<int>(m_config.shadow_type);
+            ImGui::Combo("Shadow", &shadow_item, shadow_items,
+                         IM_ARRAYSIZE(shadow_items));
+            m_config.shadow_type = static_cast<Shadow_Type>(shadow_item);
+        }
+
+        //std::cerr << "AA: " << static_cast<int>(m_config.aa_type) << ", "
+        //        << "AO: " << static_cast<int>(m_config.ao_type) << ", "
+        //        << "Shadow: " << static_cast<int>(m_config.shadow_type) << "\n";
+
+        show_debugging_panel();
+
         ImGui::End();
     }
 
-    if (show_another_window) {
-        ImGui::Begin(
-            "Another Window",
-            &show_another_window); // Pass a pointer to our bool variable (the
-                                   // window will have a closing button that
-                                   // will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            show_another_window = false;
-        ImGui::End();
-    }
 }
 
 void ImGui_Context::end_frame()
@@ -94,62 +168,3 @@ void ImGui_Context::end_frame()
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
-
-// Start the Dear ImGui frame
-// ImGui_ImplOpenGL3_NewFrame();
-// ImGui_ImplGlfw_NewFrame();
-// ImGui::NewFrame();
-
-// if (show_demo_window)
-//     ImGui::ShowDemoWindow(&show_demo_window);
-//
-//// 2. Show a simple window that we create ourselves. We use a Begin/End pair
-//// to create a named window.
-
-//{
-//    // 在 ImGui 窗口中添加一个按钮，用于触发文件对话框
-//    if (ImGui::Button("Load File")) {
-//        show_file_dialog = true;
-//    }
-
-//    // 在 ImGui 窗口中添加文件对话框
-//    // 在 ImGui 窗口中添加文件对话框
-//    if (show_file_dialog) {
-//        ImGui::OpenPopup("File Dialog");
-//        if (ImGui::BeginPopupModal("File Dialog", NULL,
-//                                   ImGuiWindowFlags_AlwaysAutoResize)) {
-//            ImGui::Text("Select a file:");
-
-//            // 使用 ImGui 的输入框来获取文件名
-//            ImGui::InputText("File Name", selected_file,
-//                             sizeof(selected_file));
-
-//            if (ImGui::Button("Open")) {
-//                // 处理文件加载操作，根据 selected_file 执行加载操作
-//                // ...
-
-//                show_file_dialog = false;
-//            }
-
-//            if (ImGui::Button("Cancel")) {
-//                show_file_dialog = false;
-//            }
-
-//            ImGui::EndPopup();
-//        }
-//    }
-//}
-
-//// 3. Show another simple window.
-// if (show_another_window) {
-//     ImGui::Begin(
-//         "Another Window",
-//         &show_another_window); // Pass a pointer to our bool variable (the
-//                                // window will have a closing button that
-//                                // will clear the bool when clicked)
-//     ImGui::Text("Hello from another window!");
-//     if (ImGui::Button("Close Me"))
-//         show_another_window = false;
-//     ImGui::End();
-// }

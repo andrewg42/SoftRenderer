@@ -11,4 +11,6 @@ struct Manager {
 
     Manager() = default;
     virtual ~Manager() = default;
+
+    void update();
 };

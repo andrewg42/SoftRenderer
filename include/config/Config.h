@@ -30,17 +30,23 @@ struct Config {
     Shadow_Type shadow_type;
     AO_Type ao_type;
 
-    glm::u8vec4 clear_color;
-    glm::u8vec4 light_color;
-    glm::u8vec4 obj_color;
+    glm::vec4 clear_color;
+    glm::vec3 light_color;
+
+    bool has_texture;
+    glm::vec4 obj_color;
+
+    bool enable_faceculling;
+    bool enable_wireframe;
 
     Config():
-        aa_type(AA_Type::None),
-        shadow_type(Shadow_Type::None),
-        ao_type(AO_Type::None),
-        clear_color({221, 221, 221, 255}),
-        light_color({255, 255, 255, 255}),
-        obj_color({255, 255, 255, 255})
+            aa_type(AA_Type::None),
+            shadow_type(Shadow_Type::None),
+            ao_type(AO_Type::None),
+            clear_color({221.0f / 255, 221.0f / 255, 221.0f / 255, 1.0f}),
+            light_color({1.0f, 1.0f, 1.0f}),
+            has_texture(false), obj_color({1.0f, 1.0f, 1.0f, 1.0f}),
+            enable_faceculling(true), enable_wireframe(false)
     {
     }
     virtual ~Config() = default;

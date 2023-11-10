@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/glm.hpp"
+#include "viewer/ImGui_Context.h"
 
 struct Light {
     glm::vec3 pos, color;
@@ -9,4 +10,6 @@ struct Light {
 
     Light();
     ~Light();
+
+    void update();
 };
