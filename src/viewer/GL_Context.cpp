@@ -184,7 +184,8 @@ void GL_Context::init()
     CHECK_GL(glEnableVertexAttribArray(1));
 
     // initialize rasterizer
-    raster.add_model("assets/monkey/monkey.obj");
+    raster.add_model("assets/spot/spot_triangulated_good.obj");
+    raster.add_texture("assets/spot/spot_texture.png");
     raster.set_buffer_size(SCR_WIDTH, SCR_HEIGHT);
 
     // create a texture

@@ -6,12 +6,13 @@
 #include "stb/stb_image.h"
 #include <stdexcept>
 
-template <> Texture<glm::u8vec4>::Texture(std::string const &path)
+Texture::Texture(std::string const &path)
 {
-    constexpr int dim = 4;
-    int x{}, y{}, cmp = dim;
-    unsigned char *p = stbi_load(path.c_str(), &x, &y, &cmp, cmp);
+    constexpr int dim = 3;
+    int nx{}, ny{}, cmp = dim;
+    unsigned char *p = stbi_load(path.c_str(), &nx, &ny, &cmp, cmp);
     if (cmp != dim) {
+        std::cerr << "cmp = " << cmp << '\n';
         throw std::invalid_argument("invalid component return");
     }
 #ifndef NDEBUG
@@ -19,10 +20,9 @@ template <> Texture<glm::u8vec4>::Texture(std::string const &path)
               << ", channels: " << dim << ".\n";
 #endif
 
-    img_data.resize(x * y);
+    img_data.resize(nx * ny);
     std::memcpy(img_data.data(), p, img_data.size() * sizeof(img_data[0]));
-    nx = static_cast<std::size_t>(x);
-    ny = static_cast<std::size_t>(y);
+    m_nx = static_cast<std::size_t>(nx);
+    m_ny = static_cast<std::size_t>(ny);
 
-    stbi_image_free(p);
 }

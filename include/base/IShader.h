@@ -1,26 +1,31 @@
-// TODO
 #pragma once
 
 #include "glm/glm.hpp"
+#include <optional>
+#include <memory>
 
 #include "asset_mgr/Texture.h"
+#include "base/Light.h"
 
-template <class T = glm::u8vec4> struct fragment_shader_payload {
+struct FragShader_Payload {
     glm::vec3 view_pos;
-    glm::vec3 color;
+    glm::mat3 model_it;
+    std::vector<Light> lights;
+    glm::vec3 obj_color;
+    glm::vec3 frag_pos;
     glm::vec3 normal;
     glm::vec2 tex_coords;
-    Texture<T> *texture;
+    std::optional<std::shared_ptr<Texture>> texture;
 
-    fragment_shader_payload() { texture = nullptr; }
+    FragShader_Payload() { texture = std::nullopt; }
 
-    explicit fragment_shader_payload(glm::vec3 const &col, glm::vec3 const &nor,
-                            glm::vec2 const &tc, Texture<T> *tex)
-        : color(col), normal(nor), tex_coords(tc), texture(tex)
+    explicit FragShader_Payload(glm::vec3 const &pos, glm::vec3 const &nor,
+                        glm::vec2 const &tc, std::shared_ptr<Texture> &pt)
+        : frag_pos(pos), normal(nor), tex_coords(tc), texture(pt)
     {
     }
 };
 
-struct vertex_shader_payload {
-    glm::vec3 position;
-};
+glm::vec3 blinn_phong_obj_color(FragShader_Payload &);
+glm::vec3 blinn_phong_texture(FragShader_Payload &);
+glm::vec3 show_normal(FragShader_Payload &);

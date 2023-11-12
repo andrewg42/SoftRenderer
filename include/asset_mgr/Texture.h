@@ -8,20 +8,21 @@
 
 #include "glm/glm.hpp"
 
-template <class T = glm::u8vec4> struct Texture {
-    std::size_t nx, ny;
-    std::vector<T> img_data;
+struct Texture {
+    std::size_t m_nx, m_ny;
+    std::vector<glm::u8vec3> img_data;
 
     Texture() = default;
     ~Texture() = default;
 
     explicit Texture(std::string const &path);
 
-    T *data() { return img_data.data(); }
+    glm::u8vec3 *data() { return img_data.data(); }
 
     std::size_t size() const
     {
-        assert(nx * ny == img_data.size());
-        return nx * ny;
+        assert(m_nx * m_nx == img_data.size());
+        return m_nx * m_nx;
     }
+
 };

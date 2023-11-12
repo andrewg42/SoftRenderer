@@ -23,10 +23,12 @@ struct Buffer : Singleton<Buffer> {
     Buffer();
     ~Buffer();
 
-    void clear_color(glm::u8vec4 color = {221, 221, 221, 255});
-    void clear_depth();
     void down_sampling(std::size_t, std::size_t);
 
     void resize(std::size_t const);
     void clear(Buffer_Type op);
+
+private:
+    void clear_color(glm::u8vec4 color = {221, 221, 221, 255});
+    void clear_depth();
 };

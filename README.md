@@ -30,17 +30,17 @@ Rendering
 - [ ] cube map
 
 - Lighting Model
-  - [ ] Blinn-Phong
+  - [x] Blinn-Phong
   - [ ] PBR
 - Anti-Aliasing
-  - [ ] MSAA
+  - [x] MSAA
   - [ ] FXAA
   - [ ] TAA
 
 - Shadow
-  - [ ] shadow mapping
+  - [x] shadow mapping
 
-  - [ ] PCSS
+  - [x] PCSS
 
 - Ambient Occlusion
   - [ ] SSAO

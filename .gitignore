@@ -5,3 +5,4 @@ out/
 .ccls
 .vs/
 .vscode/
+CMakeSettings.json
