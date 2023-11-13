@@ -24,5 +24,5 @@ struct Texture {
         assert(m_nx * m_nx == img_data.size());
         return m_nx * m_nx;
     }
-
+    glm::vec3 get_data(float, float);
 };

@@ -186,19 +186,19 @@ void Rasterizer::draw()
     // --------------
     ImGui_Context &gui = ImGui_Context::instance();
     // TODO: switch frag_shader by option
-    //switch(gui.m_config.aa_type) {
-    //case AA_Type::None:
-    //    frag_shader = blinn_phong_obj_color;
-    //    break;
-    //case AA_Type::FXAA:
+    switch(gui.m_config.aa_type) {
+    case AA_Type::None:
+        frag_shader = blinn_phong_obj_color;
+        break;
+    case AA_Type::FXAA:
         frag_shader = blinn_phong_texture;
-    //    break;
-    //case AA_Type::SMAA:
-    //    frag_shader = show_normal;
-    //    break;
-    //default:
-    //    frag_shader = blinn_phong_obj_color;
-    //}
+        break;
+    case AA_Type::SMAA:
+        frag_shader = show_normal;
+        break;
+    default:
+        frag_shader = blinn_phong_obj_color;
+    }
 
     // clear color
     m_buffer.clear(Buffer_Type::color | Buffer_Type::depth);

@@ -26,3 +26,14 @@ Texture::Texture(std::string const &path)
     m_ny = static_cast<std::size_t>(ny);
 
 }
+
+
+glm::vec3 Texture::get_data(float u, float v) {
+    std::size_t new_x = static_cast<std::size_t>(u * m_nx);
+    std::size_t new_y = static_cast<std::size_t>((1.0f-v) * m_ny);
+    auto tmp = img_data.at(new_y * m_nx + new_x);
+    return glm::vec3(
+        static_cast<float>(tmp.x) / 255.0f,  
+        static_cast<float>(tmp.y) / 255.0f, 
+        static_cast<float>(tmp.z) / 255.0f);
+}
