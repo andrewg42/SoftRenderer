@@ -236,7 +236,8 @@ void Rasterizer::draw()
         glm::vec4 pos_view = modelview * glm::vec4(vec_pos[i], 1.0f);
         vec_pos_view.push_back(perspective_divide(pos_view));
         glm::vec4 pos_proj = proj * pos_view;
-        vec_pos_scr.push_back(ndc2scr(perspective_divide(pos_proj),
+        glm::vec3 pos_ndc = perspective_divide(pos_proj);
+        vec_pos_scr.push_back(ndc2scr(pos_ndc,
                                m_input.m_width, m_input.m_height));
     }
 
