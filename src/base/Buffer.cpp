@@ -57,7 +57,6 @@ void Buffer::clear(Buffer_Type op)
 
 void Buffer::down_sampling(std::size_t width_out, std::size_t height_out)
 {
-    std::size_t width_in = sample * width_out;
 
     for (std::size_t y{}; y < height_out; y++) {
         for (std::size_t x{}; x < width_out; x++) {
@@ -65,7 +64,8 @@ void Buffer::down_sampling(std::size_t width_out, std::size_t height_out)
 
             for (std::size_t dy{}; dy < sample; dy++) {
                 for (std::size_t dx{}; dx < sample; dx++) {
-                    std::size_t idx = (y + dy) * width_in + x + dx;
+                    std::size_t idx = (y * sample + dy) * width_out * sample +
+                                      x * sample + dx;
                     sum += glm::u16vec4(m_color[idx]);
                 }
             }

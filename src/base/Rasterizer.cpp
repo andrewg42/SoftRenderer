@@ -9,6 +9,16 @@
 #include "utils/ticktock.h"
 #include "viewer/ImGui_Context.h"
 
+std::vector<glm::vec2> step = { glm::vec2(0.5f, 0.5f) };
+// for 2xMSAA
+std::vector<glm::vec2> step_msaa = {
+    glm::vec2(0.125f, 0.375f),
+    glm::vec2(0.625f, 0.125f),
+    glm::vec2(0.375f, 0.875f),
+    glm::vec2(0.875f, 0.625f),
+};
+
+
 struct Rasterizer::Private : Manager {};
 
 Rasterizer::Rasterizer():
@@ -86,7 +96,7 @@ void Rasterizer::set_color(std::size_t x, std::size_t y, glm::u8vec4 color)
 void Rasterizer::tick() {
     ImGui_Context &gui = ImGui_Context::instance();
     p_private->update();
-    if(gui.m_config.aa_type == AA_Type::MSAA) {
+    if(gui.m_config.aa_type == AA_Type::MSAA && !gui.m_config.enable_wireframe) {
         m_buffer.sample = 2;
     } else {
         m_buffer.sample = 1;
@@ -184,21 +194,22 @@ void Rasterizer::draw()
 {
     // initialization
     // --------------
+
     ImGui_Context &gui = ImGui_Context::instance();
-    // TODO: switch frag_shader by option
-    switch(gui.m_config.aa_type) {
-    case AA_Type::None:
+    switch(gui.m_config.model_type) {
+    case Model_Type::light:
         frag_shader = blinn_phong_obj_color;
         break;
-    case AA_Type::FXAA:
-        frag_shader = blinn_phong_texture;
-        break;
-    case AA_Type::SMAA:
+    case Model_Type::normal:
         frag_shader = show_normal;
         break;
+    case Model_Type::texture:
+        frag_shader = blinn_phong_texture;
+        break;
     default:
-        frag_shader = blinn_phong_obj_color;
+        break;
     }
+    tick();
 
     // clear color
     m_buffer.clear(Buffer_Type::color | Buffer_Type::depth);
@@ -249,6 +260,11 @@ void Rasterizer::draw()
     fsp.lights.clear();
     Light light = p_private->m_scene.m_lights;
     fsp.lights.push_back(light);
+
+    std::vector<glm::vec2> &st = step;
+    if (gui.m_config.aa_type == AA_Type::MSAA) {
+        st = step_msaa;
+    }
 
     // shape assembly
     // ---------------
@@ -322,7 +338,6 @@ void Rasterizer::draw()
                             static_cast<unsigned char>(tmp.y * 255),
                             static_cast<unsigned char>(tmp.z * 255),
                             static_cast<unsigned char>(tmp.w * 255));
-
             // omp_set_num_threads(16);
             // #pragma omp parallel for
             for (int y = std::max(bbox_min[1], 0);
@@ -334,35 +349,45 @@ void Rasterizer::draw()
                                    static_cast<int>(m_input.m_width - 1));
                      x++) {
                     // get u and v of barycentric
-                    // u, v are used to calculate the color and depth at point
-                    // (x+0.5, y+0.5)
-                    M_x[2] = A[0] - x - 0.5f;
-                    M_y[2] = A[1] - y - 0.5f;
-                    glm::vec3 tmp = glm::cross(M_x, M_y);
-                    float u = tmp.x / tmp.z;
-                    float v = tmp.y / tmp.z;
-                    if (u < 0 || v < 0 || u + v > 1.0f) // outside the triangle
-                        continue;
+                    for (std::size_t i{}; i < st.size(); i++) {
+                        std::size_t idx = (y * m_buffer.sample + i / 2) *
+                                              m_input.m_width *
+                                              m_buffer.sample +
+                            x * m_buffer.sample + i % 2;
+                        M_x[2] = A[0] - x - st[i].x;
+                        M_y[2] = A[1] - y - st[i].y;
 
-                    std::size_t idx = y * m_input.m_width + x;
+                        glm::vec3 tmp = glm::cross(M_x, M_y);
+                        float u = tmp.x / tmp.z;
+                        float v = tmp.y / tmp.z;
+                        if (u < 0 || v < 0 ||
+                            u + v > 1.0f) // outside the triangle
+                            continue;
 
-                    // depth testing
-                    // this should behind shading in GPU, but this is CPU and moving this stage forward can improve performance...
-                    float depth = u * (B[2] - A[2]) + v * (C[2] - A[2]) + A[2];
-                    if (depth < m_buffer.m_depth[idx])
-                        continue;
-                    m_buffer.m_depth[idx] = depth;
 
-                    // shading
-                    fsp.obj_color = gui.m_config.obj_color; // TODO: texture
-                    fsp.normal = u * (B_norm - A_norm) + v * (C_norm - A_norm) + A_norm;
-                    fsp.frag_pos = u * (B_model - A_model) +
-                                   v * (C_model - A_model) + A_model;
-                    fsp.tex_coords = u * (B_tc - A_tc) + v * (C_tc - A_tc) + A_tc;
+                        // depth testing
+                        // this should behind shading in GPU, but this is CPU
+                        // and moving this stage forward can improve
+                        // performance...
+                        float depth =
+                            u * (B[2] - A[2]) + v * (C[2] - A[2]) + A[2];
+                        if (depth < m_buffer.m_depth[idx])
+                            continue;
+                        m_buffer.m_depth[idx] = depth;
 
-                    glm::vec3 result = frag_shader(fsp);
+                        // shading
+                        fsp.obj_color = gui.m_config.obj_color; // TODO: texture
+                        fsp.normal = u * (B_norm - A_norm) +
+                                     v * (C_norm - A_norm) + A_norm;
+                        fsp.frag_pos = u * (B_model - A_model) +
+                                       v * (C_model - A_model) + A_model;
+                        fsp.tex_coords =
+                            u * (B_tc - A_tc) + v * (C_tc - A_tc) + A_tc;
 
-                    set_color(idx, glm::vec4(result, 1.0f));
+                        glm::vec3 result = frag_shader(fsp);
+
+                        set_color(idx, glm::vec4(result, 1.0f));
+                    }
                 }
             }
         }
@@ -372,7 +397,6 @@ void Rasterizer::draw()
 
     m_buffer.down_sampling(m_input.m_width, m_input.m_height);
 
-    tick();
 
     // ping-pong buffer?
     // std::swap(m_canvas, m_buffer);

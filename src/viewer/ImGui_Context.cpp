@@ -102,11 +102,6 @@ static void show_debugging_panel() {
 void ImGui_Context::draw_panel()
 {
 
-    static const char *aa_items[] = {"None", "MSAA",
-                                     "FXAA(still not supported)",
-                                     "SMAA(still not supported)"};
-    static const char *shadow_items[] = {"None", "Shadow Mapping", "PCSS"};
-    static const char *ao_items[] = {"None", "SSAO"};
 
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
@@ -133,24 +128,41 @@ void ImGui_Context::draw_panel()
                             &m_config.enable_faceculling);
             ImGui::Checkbox("Wireframe", &m_config.enable_wireframe);
         }
-        {
-            static int aa_item = static_cast<int>(m_config.aa_type);
-            ImGui::Combo("Anti-aliasing", &aa_item, aa_items,
-                         IM_ARRAYSIZE(aa_items));
-            m_config.aa_type = static_cast<AA_Type>(aa_item);
+
+        static const char *model_items[] = {"light", "normal", "texture"};
+        static int model_item = static_cast<int>(m_config.model_type);
+        ImGui::Combo("Model", &model_item, model_items,
+                        IM_ARRAYSIZE(model_items));
+        m_config.model_type = static_cast<Model_Type>(model_item);
+        if(m_config.model_type==Model_Type::light) {
+            {
+                static const char *aa_items[] = {
+                    "None", "MSAA", "FXAA(still not supported)",
+                    "SMAA(still not supported)"};
+                static int aa_item = static_cast<int>(m_config.aa_type);
+                ImGui::Combo("Anti-aliasing", &aa_item, aa_items,
+                                IM_ARRAYSIZE(aa_items));
+                m_config.aa_type = static_cast<AA_Type>(aa_item);
+            }
+            {
+                static const char *ao_items[] = {"None", "SSAO"};
+                static int ao_item = static_cast<int>(m_config.ao_type);
+                ImGui::Combo("Ambient Occlusion", &ao_item, ao_items,
+                                IM_ARRAYSIZE(ao_items));
+                m_config.ao_type = static_cast<AO_Type>(ao_item);
+            }
+            {
+                static const char *shadow_items[] = {
+                    "None", "Shadow Mapping", "PCSS"};
+                static int shadow_item =
+                    static_cast<int>(m_config.shadow_type);
+                ImGui::Combo("Shadow", &shadow_item, shadow_items,
+                                IM_ARRAYSIZE(shadow_items));
+                m_config.shadow_type =
+                    static_cast<Shadow_Type>(shadow_item);
+            }
         }
-        {
-            static int ao_item = static_cast<int>(m_config.ao_type);
-            ImGui::Combo("Ambient Occlusion", &ao_item, ao_items,
-                         IM_ARRAYSIZE(ao_items));
-            m_config.ao_type = static_cast<AO_Type>(ao_item);
-        }
-        {
-            static int shadow_item = static_cast<int>(m_config.shadow_type);
-            ImGui::Combo("Shadow", &shadow_item, shadow_items,
-                         IM_ARRAYSIZE(shadow_items));
-            m_config.shadow_type = static_cast<Shadow_Type>(shadow_item);
-        }
+        
 
         //std::cerr << "AA: " << static_cast<int>(m_config.aa_type) << ", "
         //        << "AO: " << static_cast<int>(m_config.ao_type) << ", "

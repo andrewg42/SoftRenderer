@@ -24,7 +24,6 @@ Texture::Texture(std::string const &path)
     std::memcpy(img_data.data(), p, img_data.size() * sizeof(img_data[0]));
     m_nx = static_cast<std::size_t>(nx);
     m_ny = static_cast<std::size_t>(ny);
-
 }
 
 

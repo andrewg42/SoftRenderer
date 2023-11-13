@@ -9,15 +9,15 @@ constexpr int SCR_HEIGHT = 720;
 
 enum class AA_Type : unsigned char {
     None = 0,
-    MSAA, // TODO
+    MSAA,
     FXAA, // TODO
     SMAA, // TODO
 };
 
 enum class Shadow_Type : unsigned char {
     None = 0,
-    Shadow_Mapping, // TODO
-    PCSS,           // TODO
+    Shadow_Mapping,
+    PCSS,
 };
 
 enum class AO_Type : unsigned char {
@@ -25,10 +25,18 @@ enum class AO_Type : unsigned char {
     SSAO, // TODO
 };
 
+enum class Model_Type: unsigned char {
+    light = 0,
+    normal,
+    texture,
+    PBR, // TODO
+};
+
 struct Config {
     AA_Type aa_type;
     Shadow_Type shadow_type;
     AO_Type ao_type;
+    Model_Type model_type;
 
     glm::vec4 clear_color;
     glm::vec3 light_color;
@@ -43,6 +51,7 @@ struct Config {
             aa_type(AA_Type::None),
             shadow_type(Shadow_Type::None),
             ao_type(AO_Type::None),
+            model_type(Model_Type::light),
             clear_color({221.0f / 255, 221.0f / 255, 221.0f / 255, 1.0f}),
             light_color({1.0f, 1.0f, 1.0f}),
             has_texture(false), obj_color({1.0f, 1.0f, 1.0f, 1.0f}),
