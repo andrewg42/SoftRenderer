@@ -62,9 +62,14 @@ static glm::vec3 u82float(glm::u8vec3 c) {
 // tex2D on texture
 template <> glm::vec3 Texture<glm::u8vec3, glm::vec3>::tex2D(float u, float v)
 {
-    float x = u * m_nx, y = (1-v) * m_ny;
-    std::size_t x_floor = glm::floor(x), x_ceil = glm::ceil(x);
-    std::size_t y_floor = glm::floor(y), y_ceil = glm::ceil(y);
+    // clamp
+    float x = glm::clamp(u * (m_nx - 1), 0.0f, static_cast<float>(m_nx - 1));
+    float y = glm::clamp((1.0f - v) * (m_ny - 1), 0.0f, static_cast<float>(m_ny - 1));
+
+    std::size_t x_floor = static_cast<std::size_t>(glm::floor(x));
+    std::size_t x_ceil = static_cast<std::size_t>(glm::ceil(x));
+    std::size_t y_floor = static_cast<std::size_t>(glm::floor(y));
+    std::size_t y_ceil = static_cast<std::size_t>(glm::ceil(y));
 
     // bilinear interpolation
     auto color_bottomleft =
@@ -73,7 +78,7 @@ template <> glm::vec3 Texture<glm::u8vec3, glm::vec3>::tex2D(float u, float v)
         u82float(img_data.at(get_idx(m_nx, x_ceil, y_floor)));
     auto color_topleft = u82float(img_data.at(get_idx(m_nx, x_floor, y_ceil)));
     auto color_topright = u82float(img_data.at(get_idx(m_nx, x_ceil, y_ceil)));
-    
+
     auto color_bottom =
         color_bottomleft * (x - x_floor) + color_bottomright * (x_ceil - x);
     auto color_top =
@@ -87,7 +92,10 @@ template <> glm::vec3 Texture<glm::u8vec3, glm::vec3>::tex2D(float u, float v)
 
 // tex2D on shadow map
 template <> float Texture<float, float>::tex2D(float u, float v) {
-    float x = u * m_nx, y = (1 - v) * m_ny;
+    // clamp
+    float x = glm::clamp(u * (m_nx - 1), 0.0f, static_cast<float>(m_nx - 1));
+    float y = glm::clamp((1.0f - v) * (m_ny - 1), 0.0f, static_cast<float>(m_ny - 1));
+
     std::size_t x_floor = glm::floor(x), x_ceil = glm::ceil(x);
     std::size_t y_floor = glm::floor(y), y_ceil = glm::ceil(y);
 
