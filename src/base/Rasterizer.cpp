@@ -49,7 +49,8 @@ void Rasterizer::add_model(std::string const &path)
 
 void Rasterizer::add_texture(std::string const &path)
 {
-    std::shared_ptr<Texture> p_texture = std::make_shared<Texture>(path);
+    std::shared_ptr<Texture<glm::u8vec3, glm::vec3>> p_texture =
+        std::make_shared<Texture<glm::u8vec3, glm::vec3>>(path);
     p_private->vec_texture.push_back(p_texture);
 }
 

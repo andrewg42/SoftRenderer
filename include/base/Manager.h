@@ -10,7 +10,7 @@ struct Manager {
     Scene m_scene;
     //Camera m_camera; // this should be virtual cameras
 
-    std::vector<std::shared_ptr<Texture>> vec_texture;
+    std::vector<std::shared_ptr<Texture<glm::u8vec3, glm::vec3>>> vec_texture;
     Manager() = default;
     virtual ~Manager() = default;
 
