@@ -23,7 +23,7 @@ Texture<glm::u8vec3, glm::vec3>::Texture(std::string const &path)
 #endif
 
     img_data.resize(nx * ny);
-    std::memcpy(img_data.data(), p, img_data.size() * sizeof(img_data[0]));
+    std::memcpy(img_data.data(), p, img_data.size() * sizeof(decltype(img_data)::value_type));
     m_nx = static_cast<std::size_t>(nx);
     m_ny = static_cast<std::size_t>(ny);
 }
@@ -44,7 +44,8 @@ Texture<glm::u8vec4, glm::vec4>::Texture(std::string const &path)
 #endif
 
     img_data.resize(nx * ny);
-    std::memcpy(img_data.data(), p, img_data.size() * sizeof(img_data[0]));
+    std::memcpy(img_data.data(), p,
+                img_data.size() * sizeof(decltype(img_data)::value_type));
     m_nx = static_cast<std::size_t>(nx);
     m_ny = static_cast<std::size_t>(ny);
 }

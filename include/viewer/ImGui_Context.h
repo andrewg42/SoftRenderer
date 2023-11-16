@@ -17,7 +17,6 @@ struct ImGui_Context : Singleton<ImGui_Context> {
     {}
     ~ImGui_Context() = default;
 
-
     void init_imgui(GLFWwindow *window);
 	void start_frame();
     void draw_panel();

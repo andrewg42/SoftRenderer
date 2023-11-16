@@ -97,7 +97,7 @@ void Rasterizer::set_color(std::size_t x, std::size_t y, glm::u8vec4 color)
 void Rasterizer::tick() {
     ImGui_Context &gui = ImGui_Context::instance();
     p_private->update();
-    if(gui.m_config.aa_type == AA_Type::MSAA && !gui.m_config.enable_wireframe) {
+    if(gui.m_config.aa_type == AA_Type::MSAA) {
         m_buffer.sample = 2;
     } else {
         m_buffer.sample = 1;

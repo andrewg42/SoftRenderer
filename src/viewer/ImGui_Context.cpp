@@ -129,12 +129,14 @@ void ImGui_Context::draw_panel()
             ImGui::Checkbox("Wireframe", &m_config.enable_wireframe);
         }
 
+
+        if(m_config.enable_wireframe) goto end;
         static const char *model_items[] = {"light", "normal", "texture"};
         static int model_item = static_cast<int>(m_config.model_type);
         ImGui::Combo("Model", &model_item, model_items,
                         IM_ARRAYSIZE(model_items));
         m_config.model_type = static_cast<Model_Type>(model_item);
-        if(m_config.model_type==Model_Type::light) {
+        if(m_config.model_type==Model_Type::light || m_config.model_type==Model_Type::texture) {
             {
                 static const char *aa_items[] = {
                     "None", "MSAA", "FXAA(still not supported)",
@@ -167,7 +169,7 @@ void ImGui_Context::draw_panel()
         //std::cerr << "AA: " << static_cast<int>(m_config.aa_type) << ", "
         //        << "AO: " << static_cast<int>(m_config.ao_type) << ", "
         //        << "Shadow: " << static_cast<int>(m_config.shadow_type) << "\n";
-
+end:
         show_debugging_panel();
 
         ImGui::End();

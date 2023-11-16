@@ -10,7 +10,7 @@ void Model::load_obj(std::string const &path) {
     objl::Loader loader;
 
     if (!loader.LoadFile(path)) {
-        std::cerr << "Failed to Load File. May have failed to find it or it was not anssssssssssssss .obj file.\n";
+        std::cerr << "Failed to Load File. May have failed to find it or it was not an .obj file.\n";
         return;
     }
     for(std::size_t i{}; i<loader.LoadedMeshes.size(); i++) {

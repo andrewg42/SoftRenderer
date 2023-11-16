@@ -29,5 +29,4 @@ if(NOT TARGET stb)
     set_target_properties(stb PROPERTIES FOLDER ${stb_SOURCE_DIR_})
 endif()
 
-
 target_include_directories(main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/OBJ-Loader/Source)

@@ -29,6 +29,7 @@ enum class Model_Type: unsigned char {
     light = 0,
     normal,
     texture,
+    wireframe,
     PBR, // TODO
 };
 
